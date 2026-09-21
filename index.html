@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长歌 API · 云端接口聚合</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237dd3fc'/%3E%3Cstop offset='1' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='24' height='24' rx='8' fill='url(%23g)' opacity='0.9'/%3E%3Cpath d='M10 16h12M10 11h12M10 21h8' stroke='%23060a18' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#060a18;
+    --text:#eef2ff;
+    --text2:#9aa6c8;
+    --text3:#6b7698;
+    --line:rgba(255,255,255,.16);
+    --glass:rgba(255,255,255,.07);
+    --glass-strong:rgba(255,255,255,.10);
+    --accent1:#7dd3fc;
+    --accent2:#a78bfa;
+    --radius:22px;
+    --shadow:0 10px 40px rgba(3,6,20,.45);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ===== 毛玻璃背景光斑 ===== */
+  .aurora{
+    position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(52% 44% at 12% 18%, rgba(79,70,229,.34) 0%, transparent 62%),
+      radial-gradient(46% 40% at 86% 12%, rgba(225,29,143,.24) 0%, transparent 60%),
+      radial-gradient(50% 46% at 78% 78%, rgba(245,158,11,.16) 0%, transparent 62%),
+      radial-gradient(48% 42% at 16% 82%, rgba(34,211,238,.18) 0%, transparent 60%),
+      linear-gradient(160deg,#0a1028 0%, #060a18 55%, #0a0d22 100%);
+  }
+  .aurora::after{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.5) 0%, transparent 60%),
+      radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.4) 0%, transparent 60%),
+      radial-gradient(1.5px 1.5px at 40% 60%, rgba(255,255,255,.35) 0%, transparent 60%),
+      radial-gradient(1px 1px at 85% 45%, rgba(255,255,255,.3) 0%, transparent 60%);
+    background-size:360px 360px, 480px 480px, 420px 420px, 520px 520px;
+    opacity:.35;
+  }
+  /* ===== 樱花花瓣背景（重构自小白菜模板 sakura 着色器） ===== */
+  #sakura{
+    position:fixed;inset:0;z-index:-1;pointer-events:none;
+    opacity:.9;
+  }
+  .glass{
+    background:var(--glass);
+    -webkit-backdrop-filter:blur(24px) saturate(170%);
+    backdrop-filter:blur(24px) saturate(170%);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:0 22px}
+  /* ===== 顶部导航 ===== */
+  nav{
+    position:sticky;top:14px;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:10px 14px;margin:14px auto 0;max-width:1200px;
+    border-radius:999px;
+    background:rgba(255,255,255,.06);
+    -webkit-backdrop-filter:blur(28px) saturate(180%);
+    backdrop-filter:blur(28px) saturate(180%);
+    border:1px solid var(--line);
+    box-shadow:0 8px 32px rgba(3,6,20,.4), inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:.4px}
+  .brand .logo{
+    width:30px;height:30px;border-radius:9px;flex:none;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(125,211,252,.35);
+  }
+  .brand .logo svg{width:16px;height:16px}
+  .nav-links{display:flex;align-items:center;gap:4px}
+  .nav-links a{
+    color:var(--text2);text-decoration:none;font-size:13.5px;font-weight:500;
+    padding:7px 13px;border-radius:999px;transition:color .2s, background .2s;
+  }
+  .nav-links a:hover{color:var(--text);background:rgba(255,255,255,.08)}
+  .nav-status{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2);white-space:nowrap}
+  .dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399}
+  /* ===== Hero ===== */
+  header.hero{padding:86px 0 34px;text-align:center}
+  .hero .kicker{
+    display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--accent1);
+    padding:6px 14px;border-radius:999px;margin-bottom:22px;
+    background:rgba(125,211,252,.08);border:1px solid rgba(125,211,252,.25);
+  }
+  .hero h1{
+    font-size:clamp(34px,6vw,58px);font-weight:800;letter-spacing:-.5px;line-height:1.12;
+    background:linear-gradient(120deg,#fff 20%,var(--accent1) 55%,var(--accent2) 90%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p.sub{color:var(--text2);font-size:16px;margin-top:16px;max-width:640px;margin-inline:auto;line-height:1.7}
+  .stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:26px}
+  .stat{
+    padding:12px 22px;border-radius:16px;text-align:center;min-width:108px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  }
+  .stat b{display:block;font-size:24px;font-weight:800;color:#fff}
+  .stat span{font-size:12px;color:var(--text2)}
+  /* ===== 搜索与筛选 ===== */
+  .toolbar{position:sticky;top:82px;z-index:40;margin:26px 0 18px}
+  .search-box{display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:18px}
+  .search-box svg{flex:none;width:18px;height:18px;stroke:var(--text2)}
+  .search-box input{
+    flex:1;background:transparent;border:none;outline:none;color:var(--text);
+    font-size:15px;font-family:inherit;
+  }
+  .search-box input::placeholder{color:var(--text3)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:14px 2px 4px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:none;cursor:pointer;user-select:none;
+    padding:8px 15px;border-radius:999px;font-size:13px;color:var(--text2);
+    background:rgba(255,255,255,.05);border:1px solid var(--line);
+    transition:all .18s;
+  }
+  .chip:hover{color:var(--text);background:rgba(255,255,255,.10)}
+  .chip.on{color:#060a18;background:linear-gradient(135deg,var(--accent1),var(--accent2));border-color:transparent;font-weight:600}
+  .chip .cnt{opacity:.65;font-size:11.5px;margin-left:4px}
+  /* ===== 卡片网格 ===== */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px;padding-bottom:40px}
+  .card{
+    position:relative;padding:20px 20px 16px;border-radius:var(--radius);
+    display:flex;flex-direction:column;gap:10px;
+    transition:transform .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.32);background:var(--glass-strong)}
+  .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .card-cat{
+    font-size:11px;color:var(--accent1);padding:3px 10px;border-radius:999px;
+    background:rgba(125,211,252,.10);border:1px solid rgba(125,211,252,.22);
+  }
+  .card-ok{display:flex;align-items:center;gap:5px;font-size:11px;color:#6ee7a8}
+  .card-ok i{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399}
+  .card h3{font-size:16.5px;font-weight:700;letter-spacing:.2px}
+  .card p{font-size:13px;color:var(--text2);line-height:1.55;min-height:38px}
+  .card .ep{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    font-size:12px;color:var(--text2);background:rgba(6,10,24,.4);
+    border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:8px 10px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:all;
+  }
+  .card-actions{display:flex;gap:8px;margin-top:2px}
+  .btn{
+    flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:9px 12px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;
+    border:1px solid var(--line);color:var(--text);background:rgba(255,255,255,.07);
+    text-decoration:none;transition:background .18s, border-color .18s;font-family:inherit;
+  }
+  .btn:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
+  .btn.primary{
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#060a18;border-color:transparent;
+  }
+  .btn.primary:hover{filter:brightness(1.08);background:linear-gradient(135deg,var(--accent1),var(--accent2))}
+  .btn svg{width:14px;height:14px;flex:none}
+  .empty{
+    text-align:center;padding:70px 20px;color:var(--text3);font-size:15px;
+    border:1px dashed rgba(255,255,255,.15);border-radius:var(--radius);
+  }
+  /* ===== 页脚 ===== */
+  footer{padding:26px 0 56px}
+  .contact{padding:26px 28px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .contact h3{font-size:17px;margin-bottom:4px}
+  .contact .hint{font-size:12.5px;color:var(--text3);margin-bottom:14px}
+  .c-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(6,10,24,.35);border:1px solid rgba(255,255,255,.09);margin-bottom:10px}
+  .c-row .lbl{font-size:12px;color:var(--text3)}
+  .c-row .val{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;color:#fff;word-break:break-all}
+  .c-row button{
+    flex:none;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--text2);
+    border-radius:10px;padding:6px 12px;font-size:12px;font-family:inherit;transition:all .18s;
+  }
+  .c-row button:hover{color:var(--text);background:rgba(255,255,255,.13)}
+  footer .footnote{text-align:center;font-size:12px;color:var(--text3);margin-top:18px;line-height:1.8}
+  /* ===== Toast ===== */
+  .toast{
+    position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);
+    background:rgba(20,26,48,.92);color:#fff;font-size:13.5px;padding:11px 20px;border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);box-shadow:0 12px 40px rgba(0,0,0,.5);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    opacity:0;pointer-events:none;transition:all .25s ease;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* ===== 响应式 ===== */
+  @media (max-width:760px){
+    nav{flex-wrap:wrap;border-radius:20px}
+    .nav-links{order:3;width:100%;justify-content:space-between;border-top:1px solid rgba(255,255,255,.08);padding-top:6px;margin-top:2px}
+    .nav-links a{min-height:44px;display:inline-flex;align-items:center}
+    .nav-status{display:none}
+    header.hero{padding:60px 0 24px}
+    .toolbar{top:auto;position:static}
+    .search-box input{font-size:16px}
+    .chip{font-size:14px;padding:10px 16px}
+    .chip .cnt{font-size:12px}
+    .btn{min-height:44px}
+    .card p{font-size:14px}
+    .stat span{font-size:13px}
+    .hero .kicker{font-size:13px}
+    .c-row button{min-height:44px}
+    .contact{grid-template-columns:1fr}
+    .grid{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+    html{scroll-behavior:auto}
+  }
+  :focus-visible{outline:2px solid var(--accent1);outline-offset:2px;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<canvas id="sakura" aria-hidden="true"></canvas>
+
+<nav class="wrap">
+  <div class="brand">
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#060a18" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M5 7h14M5 17h9"/></svg></span>
+    长歌 · API
+  </div>
+  <div class="nav-links">
+    <a href="#list">接口列表</a>
+    <a href="#contact">联系方式</a>
+  </div>
+  <div class="nav-status"><span class="dot"></span>接口服务正常</div>
+</nav>
+
+<header class="hero wrap">
+  <div class="kicker">免费 · 稳定 · 持续更新</div>
+  <h1>长歌 · 云端接口聚合</h1>
+  <p class="sub">苹果毛玻璃质感下的开源 API 导航页，聚合全部可用接口，一键复制地址、直达接口文档。</p>
+  <div class="stats">
+    <div class="stat"><b id="st-total">0</b><span>可用接口</span></div>
+    <div class="stat"><b id="st-cat">0</b><span>接口分类</span></div>
+    <div class="stat"><b id="st-free">0</b><span>免费调用</span></div>
+  </div>
+</header>
+
+<main id="list" class="wrap">
+  <div class="toolbar">
+    <div class="search-box glass">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="search" type="search" placeholder="搜索接口名称或描述，如：音乐、壁纸、热搜…" autocomplete="off">
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer class="wrap" id="contact">
+  <div class="contact glass">
+    <div>
+      <h3>联系站长</h3>
+      <p class="hint">接口问题、合作、反馈都可以直接联系</p>
+      <div class="c-row">
+        <div><div class="lbl">QQ</div><div class="val" id="qq-val">486254196</div></div>
+        <button type="button" data-copy="486254196">复制 QQ</button>
+      </div>
+      <div class="c-row">
+        <div><div class="lbl">邮箱</div><div class="val" id="mail-val">lianqinghuan@qq.com</div></div>
+        <a class="btn" style="flex:none;padding:6px 12px;font-size:12px" href="mailto:lianqinghuan@qq.com">写信</a>
+      </div>
+    </div>
+    <div>
+      <h3>部署说明</h3>
+      <p class="hint">自包含单文件，可直接托管到 GitHub Pages / Vercel / Cloudflare Pages</p>
+      <p style="font-size:12.5px;color:var(--text3);line-height:1.8">
+        国外 API 均为公开免费接口，点击「接口文档」即可在新标签页查看实时返回；国内接口按自有服务部署（api/ 与 doc/ 同级）。
+      </p>
+    </div>
+  </div>
+  <p class="footnote">长歌 · API 聚合导航 · 接口来源为开源源码整理，仅供学习交流使用<br>页面视觉重构自小白菜云端模板（phpjm 解密：樱花花瓣粒子 + 苹果毛玻璃）<br>QQ 486254196 · lianqinghuan@qq.com</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 樱花花瓣背景（小白菜模板 sakura 粒子，Canvas2D 重构） ===== */
+(function(){
+  "use strict";
+  var cv = document.getElementById("sakura");
+  if(!cv || !cv.getContext) return;
+  var ctx = cv.getContext("2d");
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+  var N = reduced ? 0 : 88;
+  var P = [];
+  function make(anywhere){
+    var z = anywhere ? Math.random() : 0.2 + Math.random() * 0.8;
+    return {
+      x: Math.random() * W,
+      y: anywhere ? Math.random() * H : -60 - Math.random() * H * 0.4,
+      z: z,
+      s: (13 + Math.random() * 22) * (1.5 - z * 0.85),
+      vy: (26 + Math.random() * 60) * (1.35 - z * 0.5),
+      amp: 16 + Math.random() * 34,
+      spd: 0.4 + Math.random() * 1.1,
+      ph: Math.random() * Math.PI * 2,
+      a: Math.random() * Math.PI * 2,
+      va: (Math.random() * 1.3 - 0.65) * 0.018 * (2 - z)
+    };
+  }
+  for(var i = 0; i < N; i++) P.push(make(true));
+  var t0 = Date.now();
+  function petal(x, y, s, alpha, rot){
+    var w = s * 0.62, h = s * 0.86;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.globalAlpha = alpha;
+    var g = ctx.createLinearGradient(0, -h * 0.55, 0, h * 0.6);
+    g.addColorStop(0, "#ffd6cd");
+    g.addColorStop(0.55, "#ffb0a6");
+    g.addColorStop(1, "#ff9a94");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(0, -h * 0.5);
+    ctx.bezierCurveTo(w * 0.55, -h * 0.30, w * 0.42, h * 0.30, 0, h * 0.5);
+    ctx.bezierCurveTo(-w * 0.30, h * 0.34, -w * 0.38, -h * 0.26, 0, -h * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = alpha * 0.35;
+    ctx.fillStyle = "#ffe9e2";
+    ctx.beginPath();
+    ctx.ellipse(-w * 0.16, -h * 0.12, w * 0.20, h * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  function frame(){
+    var now = Date.now();
+    var dt = Math.min(50, now - t0) / 1000;
+    t0 = now;
+    ctx.clearRect(0, 0, W, H);
+    var t = now / 1000;
+    for(var i = 0; i < P.length; i++){
+      var p = P[i];
+      p.y += p.vy * dt;
+      p.a += p.va * dt * 60;
+      var sx = p.x + Math.sin(t * p.spd + p.ph) * p.amp;
+      if(p.y > H + 80 || sx < -80 || sx > W + 80){
+        P[i] = make(false);
+        continue;
+      }
+      petal(sx, p.y, p.s, (0.30 + 0.65 * p.z) * 0.9, p.a + p.ph * 0.1);
+    }
+    requestAnimationFrame(frame);
+  }
+  if(!reduced) requestAnimationFrame(frame);
+})();
+</script>
+
+<script>
+(function(){
+  "use strict";
+  // ===== 接口数据：[名称, 文件名, 分类, 简介] =====
+  var DATA = [
+    ["酷我音乐","kw","music","酷我音乐搜索与歌曲链接获取"],
+    ["随机唱鸭","changya","music","随机唱鸭音频接口"],
+    ["网易云听歌记录","music_163_record","music","查询网易云音乐听歌记录"],
+    ["报时音乐","baoshi","music","随机报时音乐接口"],
+    ["网易云用户信息","mywyy","music","获取网易云音乐用户信息"],
+    ["网易云音乐解析","wymusic","music","网易云音乐单曲解析"],
+    ["网易云音乐","wy","music","网易云音乐搜索与解析"],
+    ["QQ音乐MV","qqmv","music","QQ音乐 MV 播放地址解析"],
+    ["QQ音乐热歌榜","musichotlist","music","QQ音乐热歌榜（300 首）"],
+    ["QQ收藏解析","qqsc","music","QQ音乐收藏解析"],
+    ["酷狗音乐","kugoudx","music","酷狗音乐搜索与下载"],
+    ["酷狗铃声①","kugou","music","酷狗铃声下载"],
+    ["酷狗铃声②","KuGouRing","music","酷狗铃声（第二版）"],
+    ["铃声多多①","lingsheng","music","铃声多多铃声下载"],
+    ["铃声多多②","lsdd","music","铃声多多（第二版）"],
+    ["音乐合集","Music","music","多平台音乐聚合接口"],
+    ["网易云随机歌曲","neran","music","网易云音乐随机歌曲"],
+    ["知乎热搜","zhihuresou","hot","知乎热搜榜获取"],
+    ["抖音热搜","douyinresou","hot","抖音热搜榜获取"],
+    ["微视热搜","WeishiHotsearch","hot","微视热搜榜获取"],
+    ["今日头条热搜","JinRiHotsearch","hot","今日头条热搜榜获取"],
+    ["微博热搜","wb_hot","hot","微博热搜榜单获取"],
+    ["快手热搜","kuaishou_hot","hot","快手热搜榜单获取"],
+    ["B站热搜","bilibilirs","hot","B站热搜榜单获取"],
+    ["爱奇艺热搜词","qyt","hot","爱奇艺视频热搜词获取"],
+    ["网易最新发布","wyxw","hot","网易最新发布信息"],
+    ["微视视频解析","ws_video_jx","video","微视视频解析接口"],
+    ["B站接口","bilibili","video","B站视频信息获取"],
+    ["B站用户信息","bilibili2","video","B站用户信息获取"],
+    ["苏州直播源","szdst","video","苏州电视台直播源获取"],
+    ["微视短视频","vs","video","微视短视频接口"],
+    ["快手短视频","kuaishou","video","快手短视频接口"],
+    ["腾讯视频单选","txss","video","腾讯视频解析（单选）"],
+    ["腾讯视频多选","dxdy","video","腾讯视频解析（多选）"],
+    ["精选短视频①","jingxuanshipin","video","精选短视频接口"],
+    ["随机视频①","xjj","video","随机短视频接口"],
+    ["斗鱼直播","douyu","video","斗鱼直播流获取"],
+    ["随机颜色","yanse","img","随机颜色生成"],
+    ["高清壁纸","bizhi","img","高清壁纸随机获取"],
+    ["新浪随机图片","wp","img","新浪随机图片接口"],
+    ["二维码生成","qrcode","img","二维码在线生成"],
+    ["随机壁纸","sjbz","img","随机壁纸接口"],
+    ["图文合成","hct","img","文字与图片合成"],
+    ["搜图","b_sst","img","全网搜图接口"],
+    ["背景图片大全","picture","img","背景图片素材大全"],
+    ["WTM教你做事","jnzs","img","WTM 教你做事表情包生成"],
+    ["摸表情包","lieshou","img","摸头表情包生成"],
+    ["我好羡慕","xianmu","img","我好羡慕表情包生成"],
+    ["举","ju","img","举牌表情包生成"],
+    ["滚出QQ","gun","img","滚出QQ表情包生成"],
+    ["抱着哭","bao","img","抱着哭表情包生成"],
+    ["随机头像","sjtx2","img","随机头像获取"],
+    ["小人举牌","zt","img","小人举牌表情包生成"],
+    ["早安语录","getNewTheme","quote","早安语录获取"],
+    ["英汉语录","yhyl","quote","中英双语语录"],
+    ["爱情语录","qhyl","quote","爱情语录获取"],
+    ["伤感语录","sgyl","quote","伤感语录获取"],
+    ["段子","duanzi","quote","随机段子获取"],
+    ["语录段子","yldz","quote","语录与段子混合"],
+    ["我在人间凑数的日子","renjian","quote","我在人间凑数的日子语录"],
+    ["社会语录","shehui","quote","社会语录获取"],
+    ["趣味笑话","qwxh","quote","趣味笑话获取"],
+    ["人生话语","rshy","quote","人生感悟话语"],
+    ["经典语录","jdyl","quote","经典语录获取"],
+    ["舔狗日记","tiangou","quote","舔狗日记生成"],
+    ["文案温柔","wenrou","quote","温柔文案语录"],
+    ["骚话","saohua","quote","骚话语录获取"],
+    ["毒鸡汤","dujitang","quote","毒鸡汤语录获取"],
+    ["土豆情话","qinghua","quote","土豆情话获取"],
+    ["安慰语录","Comforting","quote","安慰语录获取"],
+    ["随机一言","yan","quote","随机一言句子获取"],
+    ["挑战古诗词","tzgsc","idiom","古诗词挑战题目获取"],
+    ["诗词","sc1","idiom","随机古诗词获取"],
+    ["查字","search","idiom","汉字查询接口"],
+    ["成语查询","idiom","idiom","成语释义查询"],
+    ["随机谜语","shouji","idiom","随机谜语获取"],
+    ["看图猜成语","LookIdiom","idiom","看图猜成语题目获取"],
+    ["成语搜索","IdiomSearch","idiom","成语搜索（学术类）"],
+    ["降雨查询","jiangyu","weather","降雨情况查询"],
+    ["天气三天版","tq","weather","三天天气预报"],
+    ["墨迹天气","tianqi","weather","墨迹天气数据"],
+    ["心知天气","xztq","weather","心知天气数据"],
+    ["QQ天气","qqtq","weather","QQ 天气卡片数据"],
+    ["文字转语音","wzzyy","chat","文字转语音合成"],
+    ["小爱聊天","xiaoai","chat","小爱同学智能聊天"],
+    ["语言翻译","fanyi2","chat","多语言翻译接口"],
+    ["菲菲机器人","ff","chat","天气/翻译/藏头诗/笑话等多功能机器人"],
+    ["青云客聊天","liaotian","chat","青云客智能聊天机器人"],
+    ["有道翻译","fanyi","chat","有道翻译接口"],
+    ["计算时差①","Timecal","tool","两地时差计算"],
+    ["计算时差②","Timecal2","tool","两地时差计算（第二版）"],
+    ["次数统计","tj","tool","接口调用次数统计"],
+    ["随机密码","mima","tool","随机密码生成"],
+    ["随机验证码","yanzheng","tool","随机验证码生成"],
+    ["随机姓名","xingming","tool","随机姓名生成"],
+    ["抽奖","choujiang","tool","在线抽奖接口"],
+    ["字数检测","zishu","tool","文本字数统计"],
+    ["MD5加解密","md5","tool","MD5 加密与解密"],
+    ["UUID生成","uuid","tool","UUID 生成"],
+    ["短网址生成","dwz","tool","短网址生成"],
+    ["计算机","jsq","tool","在线计算器"],
+    ["随机数","sjs","tool","随机数生成"],
+    ["时间戳","sjc","tool","时间戳转换"],
+    ["历史上的今天","today","query","历史上的今天事件"],
+    ["国外疫情","Epidemic","query","国外疫情数据查询"],
+    ["疫情查询","yq","query","疫情数据查询"],
+    ["商品搜索","shangpin","query","电商商品搜索"],
+    ["腾讯漫画","comlc","query","腾讯漫画信息获取"],
+    ["QQ凶吉","xiangji","query","QQ 号凶吉测算"],
+    ["应用宝","yyb","query","应用宝应用信息"],
+    ["王者人物","wangzhe","query","王者荣耀英雄信息"],
+    ["手机号归属地","phone","query","手机号归属地查询"],
+    ["人品走势","Ren","query","人品走势测试"],
+    ["淘宝联想词","TaoBaoAssociative","query","淘宝搜索联想词"],
+    ["QQ评估图片版","pinggu","query","QQ 号评估（图片版）"],
+    ["QQ评估文字版","qqgj","query","QQ 号评估（文字版）"],
+    ["原神抽卡模拟","Original_god","query","原神抽卡模拟"],
+    ["小冰颜值","XiaoIceBeauty","query","微软小冰颜值打分"],
+    ["星座运势","xingzuo","query","星座每日运势"],
+    ["地区解析","location_address_geocoder","ip","地理坐标转地区"],
+    ["查询IP信息","ip_info","ip","查询 IP 详细信息"],
+    ["经纬度解析","location_geocoder_address","ip","地址转经纬度"],
+    ["地理位置查询","diwzcx","ip","地理位置查询"],
+    ["获取IP","ip","ip","获取本机 IP"],
+    ["定位","dingwei","ip","IP 定位接口"],
+    ["IP实际地址","ipcha","ip","查询 IP 实际地址（百度IP库）"],
+    ["IP签名档","ipqmd","ip","IP 签名档生成"],
+    ["百度收录量","bcscslcx","site","百度收录量查询"],
+    ["域名报毒检测","check","site","检测域名是否被安全软件拦截"],
+    ["百度收录信息","baidu.collect","site","根据域名判断百度收录情况"],
+    ["网站描述","wz","site","生成网站描述"],
+    ["域名拦截检测","qmjc","site","域名拦截状态检测"],
+    ["网站状态码","zt2","site","网站状态码查询"],
+    ["微信域名检测","WechatDomainCheck","site","检测域名在微信中是否可打开"],
+    ["公安备案信息","keeponrecord","site","网站公安备案信息查询"],
+    ["百度搜索关键词","BaiduKeyword","site","百度搜索关键词联想"],
+    ["网站测速","cs","site","网站访问测速"],
+    ["Ping测速","ping","site","Ping 网站延迟测试"],
+    ["获取QQ头像","qq","qq","根据 QQ 号获取头像"],
+    ["获取QQ昵称头像","qqxt","qq","获取 QQ 昵称与头像"],
+    ["QQ签名","qianming","qq","QQ 签名档生成"],
+    ["网页跳转","wztz","page","网页跳转接口"],
+    ["DIY超长气泡","DIY","page","DIY 超长气泡生成"],
+    ["个人主页生成","zhuye","page","个人主页一键生成"],
+    ["DIY气泡","diyble","page","DIY 气泡生成"],
+    ["应用启动","qdyy","other","应用启动图接口"],
+    ["漂流瓶","drift","other","漂流瓶消息获取"],
+    ["全服公告","qfgg","other","全服公告获取"],
+    ["个性网名","usern","other","个性网名生成"],
+    /* ===== 国外 API（国际公开免费接口，GitHub Pages 可直连） ===== */
+    ["Dog 随机图","https://dog.ceo/api/breeds/image/random","intl","Dog CEO 随机狗狗图片"],
+    ["Cat 随机图","https://api.thecatapi.com/v1/images/search","intl","The Cat API 随机猫咪图"],
+    ["Fox 随机图","https://randomfox.ca/floof/","intl","随机狐狸图片"],
+    ["猫图 JSON","https://cataas.com/cat?json=true","intl","CATAAS 随机猫图 JSON"],
+    ["随机狗狗","https://random.dog/woof.json","intl","random.dog 随机犬只图片"],
+    ["随机建议","https://api.adviceslip.com/advice","intl","Advice Slip 随机英文建议"],
+    ["双语笑话","https://v2.jokeapi.dev/joke/Any","intl","JokeAPI 多语言随机笑话"],
+    ["诺里斯梗","https://api.chucknorris.io/jokes/random","intl","Chuck Norris 随机梗句"],
+    ["冷知识","https://uselessfacts.jsph.pl/api/v2/facts/random","intl","随机无用冷知识"],
+    ["英文语录","https://zenquotes.io/api/random","intl","ZenQuotes 随机英文语录"],
+    ["YesNo","https://yesno.wtf/api","intl","随机是/否回答（含 GIF）"],
+    ["老爸冷笑话","https://icanhazdadjoke.com/","intl","icanhazdadjoke 随机 Dad Joke"],
+    ["本机 IP","https://api64.ipify.org?format=json","intl","ipify 获取本机出口 IP"],
+    ["IP 归属地","https://ipwho.is/","intl","免费 IP 地理与归属地信息"],
+    ["全球天气","https://api.open-meteo.com/v1/forecast?latitude=39.9&longitude=116.4&current=temperature_2m","intl","Open-Meteo 全球实时天气"],
+    ["实时汇率","https://open.er-api.com/v6/latest/USD","intl","免费多币种实时汇率"],
+    ["汇率换算","https://api.frankfurter.app/latest?from=USD","intl","Frankfurter 欧洲央行汇率换算"],
+    ["国家信息","https://restcountries.com/v3.1/name/china?fullText=true","intl","REST Countries 国家与国旗数据"],
+    ["模拟数据","https://jsonplaceholder.typicode.com/todos/1","intl","JSONPlaceholder 占位测试数据"],
+    ["瑞克和莫蒂","https://rickandmortyapi.com/api/character/1","intl","Rick and Morty 角色数据"],
+    ["宝可梦","https://pokeapi.co/api/v2/pokemon/pikachu","intl","PokéAPI 宝可梦百科数据"],
+    ["星球大战","https://swapi.dev/api/people/1","intl","SWAPI 星战宇宙角色数据"],
+    ["模拟商品","https://fakestoreapi.com/products/1","intl","Fake Store 模拟电商商品"],
+    ["随机用户","https://randomuser.me/api/","intl","RandomUser 随机生成假用户"],
+    ["问答题库","https://opentdb.com/api.php?amount=1","intl","OpenTDB 多分类问答题目"],
+    ["随机菜谱","https://www.themealdb.com/api/json/v1/1/random.php","intl","MealDB 随机菜谱"],
+    ["诺贝尔奖","https://api.nobelprize.org/2.1/laureates?limit=1","intl","诺贝尔奖得主数据"],
+    ["啤酒厂","https://api.openbrewerydb.org/v1/breweries/random","intl","Open Brewery DB 全球啤酒厂"],
+    ["水果数据","https://www.fruityvice.com/api/fruit/apple","intl","FruityVice 水果营养信息"],
+    ["国家列表","https://countriesnow.space/api/v0.1/countries","intl","国家与首都列表"],
+    ["名字性别","https://api.genderize.io?name=lucas","intl","Genderize 根据名字猜性别"],
+    ["名字国籍","https://api.nationalize.io?name=nathaniel","intl","Nationalize 根据名字猜国籍"],
+    ["名字年龄","https://api.agify.io?name=michael","intl","Agify 根据名字猜年龄"],
+    ["押韵查询","https://api.datamuse.com/words?rel_rhy=jump","intl","Datamuse 英文押韵词查询"],
+    ["每日天文图","https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY","intl","NASA 每日天文图片（演示密钥）"],
+    ["漫威倒计时","https://www.whenisthenextmcufilm.com/api","intl","下一部漫威电影上映倒计时"],
+    ["日出日落","https://api.sunrise-sunset.org/json?lat=39.9&lng=116.4&formatted=0","intl","任意地点日出日落时间"],
+    ["全球地震","https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson","intl","USGS 全球今日地震"],
+    ["邮编查询","https://api.zippopotam.us/us/90210","intl","Zippopotam 邮编地理查询"]
+  ];
+  var CATS = {
+    "music":"音乐","hot":"热榜","video":"视频","img":"图片壁纸","quote":"语录文案",
+    "idiom":"成语汉字","weather":"天气","chat":"翻译聊天","tool":"工具计算","query":"查询",
+    "ip":"IP定位","site":"网站检测","qq":"QQ","page":"页面工具","other":"其他",
+    "intl":"国外API"
+  };
+  var DOC_ONLY = {"wztz":1,"zhuye":1};
+  var NO_DOC = {"DIY":1};
+
+  var grid = document.getElementById("grid");
+  var chipsBox = document.getElementById("chips");
+  var searchInput = document.getElementById("search");
+  var toast = document.getElementById("toast");
+  var curCat = "all";
+  var toastTimer = null;
+
+  function isExt(p){ return /^https?:\/\//.test(p); }
+
+  function endpoint(p){
+    if(isExt(p)) return p;
+    return DOC_ONLY[p] ? ("doc/"+p+".php") : ("api/"+p+".php");
+  }
+
+  function docHref(p, ep){
+    if(isExt(p)) return ep;
+    return NO_DOC[p] ? ep : ("doc/"+p+".php");
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 1800);
+  }
+
+  function copyText(txt){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        showToast("已复制： " + txt);
+      }, function(){ fallbackCopy(txt); });
+    } else { fallbackCopy(txt); }
+  }
+  function fallbackCopy(txt){
+    var ta = document.createElement("textarea");
+    ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); showToast("已复制： " + txt); }
+    catch(e){ showToast("复制失败，请手动复制"); }
+    document.body.removeChild(ta);
+  }
+
+  function buildChips(){
+    var counts = {};
+    DATA.forEach(function(it){ counts[it[2]] = (counts[it[2]]||0)+1; });
+    var html = '<div class="chip on" data-cat="all">全部<span class="cnt">'+DATA.length+'</span></div>';
+    Object.keys(CATS).forEach(function(k){
+      if(!counts[k]) return;
+      html += '<div class="chip" data-cat="'+k+'">'+CATS[k]+'<span class="cnt">'+counts[k]+'</span></div>';
+    });
+    chipsBox.innerHTML = html;
+    chipsBox.querySelectorAll(".chip").forEach(function(ch){
+      ch.addEventListener("click", function(){
+        chipsBox.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("on"); });
+        ch.classList.add("on");
+        curCat = ch.getAttribute("data-cat");
+        render();
+      });
+    });
+  }
+
+  function render(){
+    var q = searchInput.value.trim().toLowerCase();
+    var list = DATA.filter(function(it){
+      if(curCat !== "all" && it[2] !== curCat) return false;
+      if(!q) return true;
+      return (it[0] + it[3] + CATS[it[2]]).toLowerCase().indexOf(q) !== -1;
+    });
+    if(!list.length){
+      grid.innerHTML = '<div class="empty">没有找到匹配的接口，换个关键词试试</div>';
+      return;
+    }
+    var html = "";
+    list.forEach(function(it){
+      var n=it[0], p=it[1], c=it[2], d=it[3], ep=endpoint(p);
+      html += '<article class="card glass">'
+        + '<div class="card-top"><span class="card-cat">'+CATS[c]+'</span><span class="card-ok"><i></i>正常</span></div>'
+        + '<h3>'+n+'</h3><p>'+d+'</p>'
+        + '<div class="ep">'+ep+'</div>'
+        + '<div class="card-actions">'
+        + '<button type="button" class="btn" data-copy="'+ep+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>复制地址</button>'
+        + '<a class="btn primary" href="'+docHref(p, ep)+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>接口文档</a>'
+        + '</div></article>';
+    });
+    grid.innerHTML = html;
+    grid.querySelectorAll("[data-copy]").forEach(function(btn){
+      btn.addEventListener("click", function(){ copyText(btn.getAttribute("data-copy")); });
+    });
+  }
+
+  document.querySelectorAll("[data-copy]").forEach(function(btn){
+    btn.addEventListener("click", function(){ copyText(btn.getAttribute("data-copy")); });
+  });
+  searchInput.addEventListener("input", render);
+
+  document.getElementById("st-total").textContent = DATA.length;
+  document.getElementById("st-cat").textContent = Object.keys(CATS).filter(function(k){ return DATA.some(function(it){ return it[2]===k; }); }).length;
+  document.getElementById("st-free").textContent = DATA.length;
+
+  buildChips();
+  render();
+})();
+</script>
+</body>
+</html>
