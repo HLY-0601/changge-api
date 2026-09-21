@@ -295,7 +295,7 @@
   }
   window.addEventListener("resize", resize);
   resize();
-  var N = reduced ? 0 : 88;
+  var N = reduced ? 0 : 30;
   var P = [];
   function make(anywhere){
     var z = anywhere ? Math.random() : 0.2 + Math.random() * 0.8;
@@ -303,9 +303,9 @@
       x: Math.random() * W,
       y: anywhere ? Math.random() * H : -60 - Math.random() * H * 0.4,
       z: z,
-      s: (13 + Math.random() * 22) * (1.5 - z * 0.85),
-      vy: (26 + Math.random() * 60) * (1.35 - z * 0.5),
-      amp: 16 + Math.random() * 34,
+      s: (8 + Math.random() * 12) * (1.5 - z * 0.85),
+      vy: (22 + Math.random() * 40) * (1.35 - z * 0.5),
+      amp: 14 + Math.random() * 26,
       spd: 0.4 + Math.random() * 1.1,
       ph: Math.random() * Math.PI * 2,
       a: Math.random() * Math.PI * 2,
@@ -353,7 +353,7 @@
         P[i] = make(false);
         continue;
       }
-      petal(sx, p.y, p.s, (0.30 + 0.65 * p.z) * 0.9, p.a + p.ph * 0.1);
+      petal(sx, p.y, p.s, (0.12 + 0.30 * p.z) * 0.7, p.a + p.ph * 0.1);
     }
     requestAnimationFrame(frame);
   }
